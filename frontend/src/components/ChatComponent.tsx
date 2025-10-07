@@ -194,7 +194,7 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, tasks }: Chat
   return (
     <div className="flex flex-col h-full bg-white rounded-lg shadow-lg overflow-hidden">
       {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 flex items-center gap-3 flex-shrink-0">
+  <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 flex items-center gap-3 flex-shrink-0 min-h-[64px]">
         <Bot className="w-6 h-6" />
         <div>
           <h2 className="text-xl font-bold">AI アシスタント</h2>
@@ -282,13 +282,18 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, tasks }: Chat
       {/* 入力エリア */}
       <div className="p-4 bg-white border-t border-gray-200 flex-shrink-0">
         <div className="flex gap-2">
-          <input
-            type="text"
+          {/*
+            テキストエリアで3行まで改行可能。4行目以降はスクロール。
+            Enterで送信、Shift+Enterで改行。
+          */}
+          <textarea
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onChange={e => setMessage(e.target.value)}
+            onKeyDown={handleKeyPress}
             placeholder="メッセージを入力... (例: 明日までにログイン機能を作る)"
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            rows={1}
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none max-h-[120px] min-h-[48px] overflow-y-auto"
+            style={{lineHeight: '1.5'}}
             disabled={isLoading}
           />
           <button

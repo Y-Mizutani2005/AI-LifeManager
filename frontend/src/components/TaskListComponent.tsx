@@ -211,7 +211,7 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
     >
       <div className="flex flex-col h-full bg-white rounded-lg shadow-lg overflow-hidden">
         {/* ヘッダー */}
-        <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex-shrink-0">
+  <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex-shrink-0">
           <div className="flex items-center gap-2 mb-2">
             <Calendar className="w-6 h-6" />
             <h2 className="text-xl font-bold">今日のタスク</h2>
