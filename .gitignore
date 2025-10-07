@@ -1,0 +1,34 @@
+# フロントエンド関連
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+
+# バックエンド関連
+backend/venv/
+backend/__pycache__/
+backend/.env
+backend/*.pyc
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# エディタ設定
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS生成ファイル
+.DS_Store
+Thumbs.db
+*.log
+
+# その他
+.env
+*.sqlite
+*.db

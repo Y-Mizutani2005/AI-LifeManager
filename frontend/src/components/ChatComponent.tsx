@@ -1,0 +1,308 @@
+import { useState, useRef, useEffect } from 'react'
+import { Bot, User, Send } from 'lucide-react'
+
+
+/**
+ * メッセージの型定義
+ */
+interface Message {
+  role: 'user' | 'assistant'
+  content: string
+  timestamp: Date
+}
+
+/**
+ * ChatComponentのプロパティ
+ */
+interface ChatComponentProps {
+  onTaskCreate: (taskData: any) => void
+  onTaskDelete: (id: string) => void
+  onTaskToggle: (id: string) => void
+  tasks: any[]
+}
+
+/**
+ * AI対話チャットコンポーネント
+ * 
+ * ユーザーとAIアシスタントの対話を管理します。
+ * タスク作成やプロジェクトの相談をAIに依頼できます。
+ * 
+ * @param onTaskCreate - タスク作成時のコールバック関数
+ * @param onTaskDelete - タスク削除時のコールバック関数
+ * @param onTaskToggle - タスク完了/未完了切り替え時のコールバック関数
+ * @param tasks - 現在のタスクリスト
+ */
+const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, tasks }: ChatComponentProps) => {
+  const [message, setMessage] = useState('')
+  const [chatHistory, setChatHistory] = useState<Message[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+  const chatEndRef = useRef<HTMLDivElement>(null)
+
+  /**
+   * チャット履歴の最下部までスクロールする
+   */
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }, [chatHistory])
+
+  /**
+   * メッセージをAIに送信してレスポンスを受け取る
+   */
+  const sendMessage = async () => {
+    if (!message.trim() || isLoading) return
+
+    const userMessage: Message = {
+      role: 'user',
+      content: message,
+      timestamp: new Date()
+    }
+
+    setChatHistory(prev => [...prev, userMessage])
+    setMessage('')
+    setIsLoading(true)
+
+    try {
+      // 会話履歴をバックエンドに送信（最新20件まで）
+      const historyToSend = chatHistory.slice(-20).map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }))
+      
+      const res = await fetch('http://localhost:8000/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          message: userMessage.content, 
+          tasks,
+          history: historyToSend  // 会話履歴を追加
+        })
+      })
+
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`)
+      }
+
+      const data = await res.json()
+
+      // 開発環境でのみデバッグログを出力
+      if (import.meta.env.DEV) {
+        console.log('🔍 バックエンドレスポンス:', data.response)
+      }
+
+      // タスクアクションを抽出して処理
+      let displayResponse = data.response
+      
+      // 構造化されたアクションJSONを検出して処理
+      const actionsMatch = data.response.match(/\{\s*"__task_actions__"\s*:\s*\{[\s\S]*?\}\s*\}/)
+      
+      if (import.meta.env.DEV) {
+        console.log('🔍 アクションマッチ結果:', actionsMatch)
+      }
+      
+      if (actionsMatch) {
+        try {
+          if (import.meta.env.DEV) {
+            console.log('🔍 抽出されたJSON文字列:', actionsMatch[0])
+          }
+          const actionsData = JSON.parse(actionsMatch[0])
+          if (import.meta.env.DEV) {
+            console.log('🔍 パース後のアクションデータ:', actionsData)
+          }
+          const taskActions = actionsData.__task_actions__
+          
+          if (import.meta.env.DEV) {
+            console.log('📝 タスクアクション:', taskActions)
+          }
+          
+          // タスク作成アクションを処理
+          if (taskActions.create && Array.isArray(taskActions.create)) {
+            if (import.meta.env.DEV) {
+              console.log('✅ タスク作成:', taskActions.create)
+            }
+            taskActions.create.forEach((task: any) => {
+              onTaskCreate({ ...task, status: 'todo' })
+            })
+          }
+          
+          // タスク削除アクションを処理
+          if (taskActions.delete && Array.isArray(taskActions.delete)) {
+            if (import.meta.env.DEV) {
+              console.log('🗑️ タスク削除:', taskActions.delete)
+            }
+            taskActions.delete.forEach((taskId: string) => {
+              onTaskDelete(taskId)
+            })
+          }
+          
+          // タスク完了アクションを処理
+          if (taskActions.complete && Array.isArray(taskActions.complete)) {
+            if (import.meta.env.DEV) {
+              console.log('✔️ タスク完了:', taskActions.complete)
+            }
+            taskActions.complete.forEach((taskId: string) => {
+              onTaskToggle(taskId)
+            })
+          }
+          
+          // タスク未完了アクションを処理
+          if (taskActions.uncomplete && Array.isArray(taskActions.uncomplete)) {
+            if (import.meta.env.DEV) {
+              console.log('↩️ タスク未完了:', taskActions.uncomplete)
+            }
+            taskActions.uncomplete.forEach((taskId: string) => {
+              onTaskToggle(taskId)
+            })
+          }
+          
+          // アクションJSONをレスポンスから除去して表示用テキストを作成
+          displayResponse = data.response.replace(actionsMatch[0], '').trim()
+        } catch (e) {
+          console.error('アクションのパース中にエラーが発生しました:', e)
+        }
+      }
+
+      const assistantMessage: Message = {
+        role: 'assistant',
+        content: displayResponse,
+        timestamp: new Date()
+      }
+
+      setChatHistory(prev => [...prev, assistantMessage])
+    } catch (error) {
+      const errorMessage: Message = {
+        role: 'assistant',
+        content: 'エラーが発生しました。バックエンドサーバーが起動しているか確認してください。',
+        timestamp: new Date()
+      }
+      setChatHistory(prev => [...prev, errorMessage])
+      console.error('チャット送信エラー:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  /**
+   * Enterキーでメッセージ送信（Shift+Enterで改行）
+   */
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      sendMessage()
+    }
+  }
+
+  return (
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* ヘッダー */}
+      <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 flex items-center gap-3 flex-shrink-0">
+        <Bot className="w-6 h-6" />
+        <div>
+          <h2 className="text-xl font-bold">AI アシスタント</h2>
+          <p className="text-sm text-blue-100">タスク作成やプロジェクトの相談ができます</p>
+        </div>
+      </div>
+
+      {/* チャット履歴エリア */}
+      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 min-h-0">
+        {chatHistory.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-gray-400">
+            <Bot className="w-16 h-16 mb-4 text-gray-300" />
+            <p className="text-lg font-semibold mb-2">AIアシスタントへようこそ！</p>
+            <div className="text-sm text-center space-y-1">
+              <p>💡 例: 「明日までにログイン機能を作る」</p>
+              <p>💡 例: 「今日のタスクを整理して」</p>
+              <p>💡 例: 「データベース設計について相談したい」</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {chatHistory.map((msg, index) => (
+              <div
+                key={index}
+                className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+              >
+                {/* アイコン */}
+                <div
+                  className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                    msg.role === 'user'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                  }`}
+                >
+                  {msg.role === 'user' ? (
+                    <User className="w-5 h-5" />
+                  ) : (
+                    <Bot className="w-5 h-5" />
+                  )}
+                </div>
+
+                {/* メッセージバブル */}
+                <div
+                  className={`max-w-[70%] rounded-lg p-4 ${
+                    msg.role === 'user'
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-white text-gray-800 shadow-md'
+                  }`}
+                >
+                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  <p
+                    className={`text-xs mt-2 ${
+                      msg.role === 'user' ? 'text-blue-100' : 'text-gray-400'
+                    }`}
+                  >
+                    {msg.timestamp.toLocaleTimeString('ja-JP', {
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })}
+                  </p>
+                </div>
+              </div>
+            ))}
+            <div ref={chatEndRef} />
+          </>
+        )}
+
+        {/* ローディングインジケーター */}
+        {isLoading && (
+          <div className="flex gap-3">
+            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
+              <Bot className="w-5 h-5 text-gray-600" />
+            </div>
+            <div className="bg-white rounded-lg p-4 shadow-md">
+              <div className="flex gap-2">
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 入力エリア */}
+      <div className="p-4 bg-white border-t border-gray-200 flex-shrink-0">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="メッセージを入力... (例: 明日までにログイン機能を作る)"
+            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+            disabled={isLoading}
+          />
+          <button
+            onClick={sendMessage}
+            disabled={isLoading || !message.trim()}
+            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-semibold"
+          >
+            <Send className="w-4 h-4" />
+            送信
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default ChatComponent
