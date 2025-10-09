@@ -1,7 +1,7 @@
 """
 タスク管理プラグイン
 
-AIがタスクの作成・削除・完了・未完了操作を行うためのSemantic Kernelプラグイン
+AIがタスクの作成・削除・完了・未完了・優先度変更を行うためのSemantic Kernelプラグイン
 """
 
 from semantic_kernel.functions import kernel_function
@@ -11,7 +11,7 @@ class TaskManagementPlugin:
     """
     タスク管理用のSemantic Kernelネイティブプラグイン
     
-    AIがタスクの作成・削除・完了・未完了を行えるようにする機能を提供します。
+    AIがタスクの作成・削除・完了・未完了・優先度変更を行えるようにする機能を提供します。
     各関数呼び出しの結果は内部リストに蓄積され、後でまとめて取得できます。
     
     Attributes:
@@ -19,6 +19,7 @@ class TaskManagementPlugin:
         tasks_to_delete: 削除するタスクIDのリスト
         tasks_to_complete: 完了にするタスクIDのリスト
         tasks_to_uncomplete: 未完了に戻すタスクIDのリスト
+        tasks_to_update_priority: 優先度を変更するタスクの情報リスト
     """
     
     def __init__(self):
@@ -27,6 +28,7 @@ class TaskManagementPlugin:
         self.tasks_to_delete: list[str] = []
         self.tasks_to_complete: list[str] = []
         self.tasks_to_uncomplete: list[str] = []
+        self.tasks_to_update_priority: list[dict] = []
     
     @kernel_function(
         name="create_task",
@@ -43,12 +45,19 @@ class TaskManagementPlugin:
         Returns:
             作成されたタスクの確認メッセージ
         """
+        # 優先度のバリデーション
+        if priority not in ['high', 'medium', 'low']:
+            priority = 'medium'
+            
         task = {
             "title": title,
             "priority": priority
         }
         self.tasks_to_create.append(task)
-        return f"タスク「{title}」(優先度: {priority})を作成しました。"
+        
+        # 優先度の日本語表記
+        priority_label = {'high': '高', 'medium': '中', 'low': '低'}[priority]
+        return f"タスク「{title}」(優先度: {priority_label})を作成しました。"
     
     @kernel_function(
         name="delete_task",
@@ -101,9 +110,37 @@ class TaskManagementPlugin:
         self.tasks_to_uncomplete.append(task_id)
         return f"タスクID: {task_id} を未完了状態に戻しました。"
     
+    @kernel_function(
+        name="update_task_priority",
+        description="タスクの優先度を変更します。ユーザーがタスクの優先度を変更したい時に使用します。"
+    )
+    def update_task_priority(self, task_id: str, priority: str) -> str:
+        """
+        タスクの優先度を変更する
+        
+        Args:
+            task_id: 優先度を変更するタスクのID
+            priority: 新しい優先度 ('high', 'medium', 'low')
+        
+        Returns:
+            優先度変更の確認メッセージ
+        """
+        # 優先度のバリデーション
+        if priority not in ['high', 'medium', 'low']:
+            return f"エラー: 優先度は 'high', 'medium', 'low' のいずれかを指定してください。"
+        
+        self.tasks_to_update_priority.append({
+            "task_id": task_id,
+            "priority": priority
+        })
+        
+        # 優先度の日本語表記
+        priority_label = {'high': '高', 'medium': '中', 'low': '低'}[priority]
+        return f"タスクID: {task_id} の優先度を「{priority_label}」に変更しました。"
+    
     def get_actions(self) -> dict[str, list]:
         """
-        実行するアクション（作成・削除・完了・未完了）を取得
+        実行するアクション（作成・削除・完了・未完了・優先度変更）を取得
         
         Returns:
             各操作のタスク情報を含む辞書
@@ -111,12 +148,14 @@ class TaskManagementPlugin:
             - delete: 削除するタスクIDのリスト
             - complete: 完了にするタスクIDのリスト
             - uncomplete: 未完了に戻すタスクIDのリスト
+            - update_priority: 優先度を変更するタスクの情報リスト
         """
         return {
             "create": self.tasks_to_create.copy(),
             "delete": self.tasks_to_delete.copy(),
             "complete": self.tasks_to_complete.copy(),
-            "uncomplete": self.tasks_to_uncomplete.copy()
+            "uncomplete": self.tasks_to_uncomplete.copy(),
+            "update_priority": self.tasks_to_update_priority.copy()
         }
     
     def clear_actions(self):
@@ -129,3 +168,4 @@ class TaskManagementPlugin:
         self.tasks_to_delete.clear()
         self.tasks_to_complete.clear()
         self.tasks_to_uncomplete.clear()
+        self.tasks_to_update_priority.clear()

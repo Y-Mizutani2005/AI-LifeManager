@@ -15,9 +15,10 @@ interface Message {
  * ChatComponentのプロパティ
  */
 interface ChatComponentProps {
-  onTaskCreate: (taskData: any) => void
-  onTaskDelete: (id: string) => void
-  onTaskToggle: (id: string) => void
+  onTaskCreate: (taskData: any) => Promise<void>
+  onTaskDelete: (id: string) => Promise<void>
+  onTaskToggle: (id: string) => Promise<void>
+  onUpdatePriority: (taskId: string, priority: 'high' | 'medium' | 'low') => Promise<void>
   tasks: any[]
 }
 
@@ -30,9 +31,10 @@ interface ChatComponentProps {
  * @param onTaskCreate - タスク作成時のコールバック関数
  * @param onTaskDelete - タスク削除時のコールバック関数
  * @param onTaskToggle - タスク完了/未完了切り替え時のコールバック関数
+ * @param onUpdatePriority - タスク優先度変更時のコールバック関数
  * @param tasks - 現在のタスクリスト
  */
-const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, tasks }: ChatComponentProps) => {
+const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePriority, tasks }: ChatComponentProps) => {
   const [message, setMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -116,42 +118,52 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, tasks }: Chat
           
           // タスク作成アクションを処理
           if (taskActions.create && Array.isArray(taskActions.create)) {
-            if (import.meta.env.DEV) {
-              console.log('✅ タスク作成:', taskActions.create)
+            console.log('✅ タスク作成アクション検出:', taskActions.create)
+            for (const task of taskActions.create) {
+              console.log('🔄 タスクを作成中:', task)
+              await onTaskCreate({ ...task, status: 'todo' })
+              console.log('✅ タスク作成完了:', task.title)
             }
-            taskActions.create.forEach((task: any) => {
-              onTaskCreate({ ...task, status: 'todo' })
-            })
           }
           
           // タスク削除アクションを処理
           if (taskActions.delete && Array.isArray(taskActions.delete)) {
-            if (import.meta.env.DEV) {
-              console.log('🗑️ タスク削除:', taskActions.delete)
+            console.log('🗑️ タスク削除アクション検出:', taskActions.delete)
+            for (const taskId of taskActions.delete) {
+              console.log('🔄 タスクを削除中:', taskId)
+              await onTaskDelete(taskId)
+              console.log('✅ タスク削除完了:', taskId)
             }
-            taskActions.delete.forEach((taskId: string) => {
-              onTaskDelete(taskId)
-            })
           }
           
           // タスク完了アクションを処理
           if (taskActions.complete && Array.isArray(taskActions.complete)) {
-            if (import.meta.env.DEV) {
-              console.log('✔️ タスク完了:', taskActions.complete)
+            console.log('✔️ タスク完了アクション検出:', taskActions.complete)
+            for (const taskId of taskActions.complete) {
+              console.log('🔄 タスクを完了中:', taskId)
+              await onTaskToggle(taskId)
+              console.log('✅ タスク完了:', taskId)
             }
-            taskActions.complete.forEach((taskId: string) => {
-              onTaskToggle(taskId)
-            })
           }
           
           // タスク未完了アクションを処理
           if (taskActions.uncomplete && Array.isArray(taskActions.uncomplete)) {
-            if (import.meta.env.DEV) {
-              console.log('↩️ タスク未完了:', taskActions.uncomplete)
+            console.log('↩️ タスク未完了アクション検出:', taskActions.uncomplete)
+            for (const taskId of taskActions.uncomplete) {
+              console.log('🔄 タスクを未完了に戻し中:', taskId)
+              await onTaskToggle(taskId)
+              console.log('✅ タスク未完了化完了:', taskId)
             }
-            taskActions.uncomplete.forEach((taskId: string) => {
-              onTaskToggle(taskId)
-            })
+          }
+          
+          // タスク優先度変更アクションを処理
+          if (taskActions.update_priority && Array.isArray(taskActions.update_priority)) {
+            console.log('🔄 優先度変更アクション検出:', taskActions.update_priority)
+            for (const update of taskActions.update_priority) {
+              console.log('🔄 優先度を変更中:', update)
+              await onUpdatePriority(update.task_id, update.priority)
+              console.log('✅ 優先度変更完了:', update.task_id)
+            }
           }
           
           // アクションJSONをレスポンスから除去して表示用テキストを作成

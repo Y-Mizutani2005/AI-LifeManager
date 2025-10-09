@@ -121,14 +121,16 @@ async def chat(req: ChatRequest):
         # プラグインからアクションを取得
         actions = task_plugin.get_actions()
         print(f"📝 アクション: create={len(actions['create'])}, delete={len(actions['delete'])}, "
-              f"complete={len(actions['complete'])}, uncomplete={len(actions['uncomplete'])}")
+              f"complete={len(actions['complete'])}, uncomplete={len(actions['uncomplete'])}, "
+              f"update_priority={len(actions['update_priority'])}")
         
         # アクションがある場合は構造化されたJSONとして追加
         has_actions = any([
             actions["create"],
             actions["delete"],
             actions["complete"],
-            actions["uncomplete"]
+            actions["uncomplete"],
+            actions["update_priority"]
         ])
         
         if has_actions:
@@ -137,7 +139,8 @@ async def chat(req: ChatRequest):
                     "create": actions["create"],
                     "delete": actions["delete"],
                     "complete": actions["complete"],
-                    "uncomplete": actions["uncomplete"]
+                    "uncomplete": actions["uncomplete"],
+                    "update_priority": actions["update_priority"]
                 }
             }
             response_text += f"\n\n{json.dumps(actions_json)}"

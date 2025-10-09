@@ -32,9 +32,9 @@ interface Task {
  */
 interface TaskListComponentProps {
   tasks: Task[]
-  onToggleTask: (id: string) => void
+  onToggleTask: (id: string) => Promise<void>
   onReorderTasks: (tasks: Task[]) => void
-  onDeleteTask: (id: string) => void
+  onDeleteTask: (id: string) => Promise<void>
 }
 
 /**

@@ -8,15 +8,16 @@
  * ✅ AI相談機能（秘書のような体験）
  * ✅ 今日のタスク表示（最小限の価値提供）
  */
-import { create } from 'zustand'
+import { useEffect, useState } from 'react'
 import ChatComponent from './components/ChatComponent'
 import TaskListComponent from './components/TaskListComponent'
 import { Sparkles } from 'lucide-react'
+import { useStore } from './store'
 
 /**
- * タスクの型定義
+ * 旧タスク型（TaskListComponentとの互換性用）
  */
-interface Task {
+interface LegacyTask {
   id: string
   title: string
   status: 'todo' | 'done'
@@ -24,71 +25,133 @@ interface Task {
 }
 
 /**
- * グローバルステート管理（Zustand）
- * タスクの状態管理とlocalStorageへの永続化を行う
- */
-const useStore = create<{
-  tasks: Task[]
-  addTask: (task: Omit<Task, 'id'>) => void
-  toggleTask: (id: string) => void
-  reorderTasks: (newTasks: Task[]) => void
-  deleteTask: (id: string) => void
-}>((set) => ({
-  // localStorageからタスクを復元
-  tasks: (JSON.parse(localStorage.getItem('tasks') || '[]') as any[]).map(t => ({
-    ...t,
-    status: t.status === 'done' ? 'done' : 'todo',
-    priority: t.priority === 'high' ? 'high' : t.priority === 'medium' ? 'medium' : 'low'
-  })),
-  
-  /**
-   * 新しいタスクを追加する
-   * @param task - 追加するタスク（idは自動生成）
-   */
-  addTask: (task) => set((state) => {
-    const newTask = { ...task, id: crypto.randomUUID() }
-    const newTasks = [...state.tasks, newTask]
-    localStorage.setItem('tasks', JSON.stringify(newTasks))
-    return { tasks: newTasks }
-  }),
-  
-  /**
-   * タスクの完了/未完了を切り替える
-   * @param id - 切り替えるタスクのID
-   */
-  toggleTask: (id) => set((state) => {
-    const newTasks = state.tasks.map(t =>
-      t.id === id ? { ...t, status: (t.status === 'todo' ? 'done' : 'todo') as Task['status'] } : t
-    )
-    localStorage.setItem('tasks', JSON.stringify(newTasks))
-    return { tasks: newTasks }
-  }),
-  
-  /**
-   * タスクの順序を並び替える
-   * @param newTasks - 並び替え後のタスクリスト
-   */
-  reorderTasks: (newTasks) => set(() => {
-    localStorage.setItem('tasks', JSON.stringify(newTasks))
-    return { tasks: newTasks }
-  }),
-  
-  /**
-   * タスクを削除する
-   * @param id - 削除するタスクのID
-   */
-  deleteTask: (id) => set((state) => {
-    const newTasks = state.tasks.filter(t => t.id !== id)
-    localStorage.setItem('tasks', JSON.stringify(newTasks))
-    return { tasks: newTasks }
-  })
-}))
-
-/**
  * メインアプリケーションコンポーネント
  */
 export default function App() {
-  const { tasks, addTask, toggleTask, reorderTasks, deleteTask } = useStore()
+  // 新しいストアから必要な関数を取得
+  const { 
+    tasks: allTasks, 
+    projects,
+    addTask, 
+    updateTask,
+    deleteTask,
+    toggleTask,
+    getTodayTasks,
+    addProject 
+  } = useStore()
+
+  const [defaultProjectId, setDefaultProjectId] = useState<string>('')
+
+  /**
+   * 初回レンダリング時にデフォルトプロジェクトを確保
+   */
+  useEffect(() => {
+    const initDefaultProject = async () => {
+      // 既存のプロジェクトがあればそれを使用
+      if (projects.length > 0) {
+        setDefaultProjectId(projects[0].id)
+        return
+      }
+
+      // なければデフォルトプロジェクトを作成
+      const defaultProject = await addProject({
+        title: '個人タスク',
+        goal: '日々のタスクを管理する',
+        description: 'デフォルトのプロジェクト',
+        status: 'active',
+        tags: [],
+      })
+      setDefaultProjectId(defaultProject.id)
+    }
+
+    initDefaultProject()
+  }, [projects, addProject])
+
+  /**
+   * 今日のタスクを旧形式に変換
+   */
+  const legacyTasks: LegacyTask[] = getTodayTasks().map(task => ({
+    id: task.id,
+    title: task.title,
+    status: task.status === 'done' ? 'done' : 'todo',
+    priority: task.priority,
+  }))
+
+  /**
+   * 旧形式のタスク追加を新ストア形式に変換
+   */
+  const handleAddTask = async (task: Omit<LegacyTask, 'id'>) => {
+    console.log('🎯 handleAddTask 呼ばれました:', task)
+    console.log('🎯 defaultProjectId:', defaultProjectId)
+    
+    if (!defaultProjectId) {
+      console.error('❌ defaultProjectIdが設定されていません!')
+      return
+    }
+
+    try {
+      const newTask = await addTask({
+        projectId: defaultProjectId,
+        title: task.title,
+        status: task.status,
+        priority: task.priority,
+        dependencies: [],
+        blockedBy: [],
+        tags: [],
+        isToday: true,
+      })
+      console.log('✅ タスク追加成功:', newTask)
+    } catch (error) {
+      console.error('❌ タスク追加エラー:', error)
+    }
+  }
+
+  /**
+   * タスクの並び替え（現在は未実装）
+   */
+  const handleReorderTasks = (newTasks: LegacyTask[]) => {
+    // TODO: 順序管理機能は将来実装
+    console.log('タスクの並び替え:', newTasks)
+  }
+
+  /**
+   * タスクの優先度を変更
+   */
+  const handleUpdatePriority = async (taskId: string, priority: 'high' | 'medium' | 'low') => {
+    console.log('🎯 handleUpdatePriority 呼ばれました:', taskId, priority)
+    try {
+      await updateTask(taskId, { priority })
+      console.log('✅ 優先度変更成功')
+    } catch (error) {
+      console.error('❌ 優先度変更エラー:', error)
+    }
+  }
+
+  /**
+   * タスク削除のラッパー
+   */
+  const handleDeleteTask = async (taskId: string) => {
+    console.log('🎯 handleDeleteTask 呼ばれました:', taskId)
+    try {
+      await deleteTask(taskId)
+      console.log('✅ タスク削除成功')
+    } catch (error) {
+      console.error('❌ タスク削除エラー:', error)
+    }
+  }
+
+  /**
+   * タスク完了切替のラッパー
+   */
+  const handleToggleTask = async (taskId: string) => {
+    console.log('🎯 handleToggleTask 呼ばれました:', taskId)
+    try {
+      await toggleTask(taskId)
+      console.log('✅ タスク切替成功')
+    } catch (error) {
+      console.error('❌ タスク切替エラー:', error)
+    }
+  }
 
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
@@ -117,16 +180,22 @@ export default function App() {
           {/* 左側: AIチャット（中央に配置、広めに） */}
           <div className="lg:col-span-2 h-full min-h-0">
             <ChatComponent 
-              onTaskCreate={addTask} 
-              onTaskDelete={deleteTask} 
-              onTaskToggle={toggleTask}
-              tasks={tasks} 
+              onTaskCreate={handleAddTask} 
+              onTaskDelete={handleDeleteTask} 
+              onTaskToggle={handleToggleTask}
+              onUpdatePriority={handleUpdatePriority}
+              tasks={legacyTasks} 
             />
           </div>
 
           {/* 右側: タスクリスト */}
           <div className="lg:col-span-1 h-full min-h-0">
-            <TaskListComponent tasks={tasks} onToggleTask={toggleTask} onReorderTasks={reorderTasks} onDeleteTask={deleteTask} />
+            <TaskListComponent 
+              tasks={legacyTasks} 
+              onToggleTask={handleToggleTask} 
+              onReorderTasks={handleReorderTasks} 
+              onDeleteTask={handleDeleteTask} 
+            />
           </div>
         </div>
       </main>
