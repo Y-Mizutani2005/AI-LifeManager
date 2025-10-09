@@ -16,16 +16,7 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-
-/**
- * タスクの型定義
- */
-interface Task {
-  id: string
-  title: string
-  status: 'todo' | 'done'
-  priority: 'high' | 'medium' | 'low'
-}
+import type { Task } from '../types'
 
 /**
  * TaskListComponentのプロパティ

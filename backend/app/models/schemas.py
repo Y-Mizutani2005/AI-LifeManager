@@ -281,7 +281,7 @@ class ChatRequest(BaseModel):
     
     Attributes:
         message: ユーザーからの新しいメッセージ
-        tasks: 現在のタスクリスト
+        tasks: 現在のタスクリスト(完全なTask型)
         history: 過去の会話履歴
     """
     message: str

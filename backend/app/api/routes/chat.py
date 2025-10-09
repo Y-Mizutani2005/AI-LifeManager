@@ -66,10 +66,18 @@ async def chat(req: ChatRequest):
             # タスクリストを生成（最大10件まで）
             task_list = ""
             if todo_tasks:
-                task_list = "\n".join([
+                task_list = "【未完了タスク】\n" + "\n".join([
                     f"- ID: {t.id}, タイトル: {t.title}, 優先度: {t.priority}" 
                     for t in todo_tasks[:10]
                 ])
+            
+            # 完了タスクも追加（削除操作のため）
+            if done_tasks:
+                done_task_list = "\n【完了タスク】\n" + "\n".join([
+                    f"- ID: {t.id}, タイトル: {t.title}, 優先度: {t.priority}" 
+                    for t in done_tasks[:10]
+                ])
+                task_list += done_task_list
             
             task_context = get_task_context_prompt(
                 todo_count=len(todo_tasks),

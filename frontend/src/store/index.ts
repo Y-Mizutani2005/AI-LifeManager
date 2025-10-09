@@ -369,13 +369,13 @@ export const useStore = create<AppState>()(
 
         return get()
           .tasks.filter((t) => {
-            // 完了タスクは除外
-            if (t.status === 'done') return false
-            
-            // isTodayフラグが立っているタスクは必ず表示
+            // isTodayフラグが立っているタスクは完了状態に関わらず表示
             if (t.isToday) return true
             
-            // 期限がないタスクは表示しない(isTodayフラグがない場合のみ)
+            // 完了タスクは除外(isTodayフラグがない場合のみ)
+            if (t.status === 'done') return false
+            
+            // 期限がないタスクは表示しない
             if (!t.dueDate) return false
 
             const dueDate = new Date(t.dueDate)

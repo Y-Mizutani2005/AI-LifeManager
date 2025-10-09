@@ -13,16 +13,7 @@ import ChatComponent from './components/ChatComponent'
 import TaskListComponent from './components/TaskListComponent'
 import { Sparkles } from 'lucide-react'
 import { useStore } from './store'
-
-/**
- * 旧タスク型（TaskListComponentとの互換性用）
- */
-interface LegacyTask {
-  id: string
-  title: string
-  status: 'todo' | 'done'
-  priority: 'high' | 'medium' | 'low'
-}
+import type { Task, TaskCreate } from './types'
 
 /**
  * メインアプリケーションコンポーネント
@@ -30,7 +21,6 @@ interface LegacyTask {
 export default function App() {
   // 新しいストアから必要な関数を取得
   const { 
-    tasks: allTasks, 
     projects,
     addTask, 
     updateTask,
@@ -68,20 +58,15 @@ export default function App() {
   }, [projects, addProject])
 
   /**
-   * 今日のタスクを旧形式に変換
+   * 今日のタスクを取得
    */
-  const legacyTasks: LegacyTask[] = getTodayTasks().map(task => ({
-    id: task.id,
-    title: task.title,
-    status: task.status === 'done' ? 'done' : 'todo',
-    priority: task.priority,
-  }))
+  const todayTasks: Task[] = getTodayTasks()
 
   /**
-   * 旧形式のタスク追加を新ストア形式に変換
+   * タスク追加ハンドラ
    */
-  const handleAddTask = async (task: Omit<LegacyTask, 'id'>) => {
-    console.log('🎯 handleAddTask 呼ばれました:', task)
+  const handleAddTask = async (taskData: Partial<TaskCreate>) => {
+    console.log('🎯 handleAddTask 呼ばれました:', taskData)
     console.log('🎯 defaultProjectId:', defaultProjectId)
     
     if (!defaultProjectId) {
@@ -92,9 +77,9 @@ export default function App() {
     try {
       const newTask = await addTask({
         projectId: defaultProjectId,
-        title: task.title,
-        status: task.status,
-        priority: task.priority,
+        title: taskData.title || '',
+        status: taskData.status || 'todo',
+        priority: taskData.priority || 'medium',
         dependencies: [],
         blockedBy: [],
         tags: [],
@@ -109,7 +94,7 @@ export default function App() {
   /**
    * タスクの並び替え（現在は未実装）
    */
-  const handleReorderTasks = (newTasks: LegacyTask[]) => {
+  const handleReorderTasks = (newTasks: Task[]) => {
     // TODO: 順序管理機能は将来実装
     console.log('タスクの並び替え:', newTasks)
   }
@@ -184,14 +169,15 @@ export default function App() {
               onTaskDelete={handleDeleteTask} 
               onTaskToggle={handleToggleTask}
               onUpdatePriority={handleUpdatePriority}
-              tasks={legacyTasks} 
+              tasks={todayTasks}
+              defaultProjectId={defaultProjectId}
             />
           </div>
 
           {/* 右側: タスクリスト */}
           <div className="lg:col-span-1 h-full min-h-0">
             <TaskListComponent 
-              tasks={legacyTasks} 
+              tasks={todayTasks} 
               onToggleTask={handleToggleTask} 
               onReorderTasks={handleReorderTasks} 
               onDeleteTask={handleDeleteTask} 

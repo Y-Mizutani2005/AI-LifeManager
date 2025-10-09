@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bot, User, Send } from 'lucide-react'
-
+import type { Task, TaskCreate } from '../types'
 
 /**
  * メッセージの型定義
@@ -15,11 +15,12 @@ interface Message {
  * ChatComponentのプロパティ
  */
 interface ChatComponentProps {
-  onTaskCreate: (taskData: any) => Promise<void>
+  onTaskCreate: (taskData: Partial<TaskCreate>) => Promise<void>
   onTaskDelete: (id: string) => Promise<void>
   onTaskToggle: (id: string) => Promise<void>
   onUpdatePriority: (taskId: string, priority: 'high' | 'medium' | 'low') => Promise<void>
-  tasks: any[]
+  tasks: Task[]
+  defaultProjectId?: string // デフォルトプロジェクトID
 }
 
 /**
@@ -33,8 +34,9 @@ interface ChatComponentProps {
  * @param onTaskToggle - タスク完了/未完了切り替え時のコールバック関数
  * @param onUpdatePriority - タスク優先度変更時のコールバック関数
  * @param tasks - 現在のタスクリスト
+ * @param defaultProjectId - デフォルトプロジェクトID
  */
-const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePriority, tasks }: ChatComponentProps) => {
+const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePriority, tasks, defaultProjectId = '' }: ChatComponentProps) => {
   const [message, setMessage] = useState('')
   const [chatHistory, setChatHistory] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -70,12 +72,35 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
         content: msg.content
       }))
       
+      // タスクを完全なTask型に変換(バックエンドのTask型に合わせる)
+      const fullTasks = tasks.map(t => ({
+        id: t.id,
+        projectId: defaultProjectId, // デフォルトプロジェクトIDを使用
+        milestoneId: undefined,
+        parentTaskId: undefined,
+        title: t.title,
+        description: undefined,
+        status: t.status,
+        priority: t.priority,
+        dueDate: undefined,
+        startDate: undefined,
+        estimatedHours: undefined,
+        actualHours: undefined,
+        dependencies: [],
+        blockedBy: [],
+        tags: [],
+        isToday: false,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        completedAt: undefined
+      }))
+      
       const res = await fetch('http://localhost:8000/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           message: userMessage.content, 
-          tasks,
+          tasks: fullTasks,
           history: historyToSend  // 会話履歴を追加
         })
       })
