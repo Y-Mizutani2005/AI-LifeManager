@@ -229,26 +229,26 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
   }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="flex flex-col h-full bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
       {/* ヘッダー */}
-  <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-4 flex items-center gap-3 flex-shrink-0 min-h-[64px]">
+      <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex items-center gap-3 flex-shrink-0 min-h-[64px]">
         <Bot className="w-6 h-6" />
         <div>
-          <h2 className="text-xl font-bold">AI アシスタント</h2>
-          <p className="text-sm text-blue-100">タスク作成やプロジェクトの相談ができます</p>
+          <h2 className="text-lg font-bold">💬 AI Assistant</h2>
+          <p className="text-xs text-purple-100">タスク作成や相談ができます</p>
         </div>
       </div>
 
       {/* チャット履歴エリア */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50 min-h-0">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 min-h-0">
         {chatHistory.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
-            <Bot className="w-16 h-16 mb-4 text-gray-300" />
-            <p className="text-lg font-semibold mb-2">AIアシスタントへようこそ！</p>
-            <div className="text-sm text-center space-y-1">
-              <p>💡 例: 「明日までにログイン機能を作る」</p>
-              <p>💡 例: 「今日のタスクを整理して」</p>
-              <p>💡 例: 「データベース設計について相談したい」</p>
+            <Bot className="w-12 h-12 mb-3 text-gray-300" />
+            <p className="text-base font-semibold mb-2">AIアシスタント</p>
+            <div className="text-xs text-center space-y-1">
+              <p>💡 「明日までにログイン機能を作る」</p>
+              <p>💡 「今日のタスクを整理して」</p>
+              <p>💡 「データベース設計について相談」</p>
             </div>
           </div>
         ) : (
@@ -256,34 +256,34 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
             {chatHistory.map((msg, index) => (
               <div
                 key={index}
-                className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
+                className={`flex gap-2 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}
               >
                 {/* アイコン */}
                 <div
-                  className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                  className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                     msg.role === 'user'
                       ? 'bg-blue-500 text-white'
                       : 'bg-gray-200 text-gray-600'
                   }`}
                 >
                   {msg.role === 'user' ? (
-                    <User className="w-5 h-5" />
+                    <User className="w-4 h-4" />
                   ) : (
-                    <Bot className="w-5 h-5" />
+                    <Bot className="w-4 h-4" />
                   )}
                 </div>
 
                 {/* メッセージバブル */}
                 <div
-                  className={`max-w-[70%] rounded-lg p-4 ${
+                  className={`max-w-[75%] rounded-lg p-3 ${
                     msg.role === 'user'
                       ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-800 shadow-md'
+                      : 'bg-white text-gray-800 shadow-sm border border-gray-200'
                   }`}
                 >
-                  <p className="whitespace-pre-wrap break-words">{msg.content}</p>
+                  <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                   <p
-                    className={`text-xs mt-2 ${
+                    className={`text-xs mt-1 ${
                       msg.role === 'user' ? 'text-blue-100' : 'text-gray-400'
                     }`}
                   >
@@ -301,12 +301,12 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
 
         {/* ローディングインジケーター */}
         {isLoading && (
-          <div className="flex gap-3">
-            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-gray-600" />
+          <div className="flex gap-2">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
+              <Bot className="w-4 h-4 text-gray-600" />
             </div>
-            <div className="bg-white rounded-lg p-4 shadow-md">
-              <div className="flex gap-2">
+            <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+              <div className="flex gap-1">
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
                 <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]" />
@@ -317,7 +317,7 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
       </div>
 
       {/* 入力エリア */}
-      <div className="p-4 bg-white border-t border-gray-200 flex-shrink-0">
+      <div className="p-3 bg-white border-t border-gray-200 flex-shrink-0">
         <div className="flex gap-2">
           {/*
             テキストエリアで3行まで改行可能。4行目以降はスクロール。
@@ -327,19 +327,18 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
             value={message}
             onChange={e => setMessage(e.target.value)}
             onKeyDown={handleKeyPress}
-            placeholder="メッセージを入力... (例: 明日までにログイン機能を作る)"
+            placeholder="メッセージを入力..."
             rows={1}
-            className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none max-h-[120px] min-h-[48px] overflow-y-auto"
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none max-h-[90px] min-h-[40px] overflow-y-auto text-sm"
             style={{lineHeight: '1.5'}}
             disabled={isLoading}
           />
           <button
             onClick={sendMessage}
             disabled={isLoading || !message.trim()}
-            className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-semibold"
+            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-semibold text-sm"
           >
             <Send className="w-4 h-4" />
-            送信
           </button>
         </div>
       </div>

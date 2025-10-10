@@ -1,19 +1,26 @@
 /**
- * Project Companion MVP - メインアプリケーション
+ * Project Companion - メインアプリケーション
  * 
  * AI対話でタスク管理ができる個人向けWebアプリ
  * 
  * コア機能:
- * ✅ AI対話でタスク作成（差別化ポイント）
- * ✅ AI相談機能（秘書のような体験）
- * ✅ 今日のタスク表示（最小限の価値提供）
+ * ✅ AI対話でタスク作成(差別化ポイント)
+ * ✅ AI相談機能(秘書のような体験)
+ * ✅ 今日のタスク表示(最小限の価値提供)
+ * ✅ Projects/Todayビュー切替
  */
 import { useEffect, useState } from 'react'
 import ChatComponent from './components/ChatComponent'
 import TaskListComponent from './components/TaskListComponent'
-import { Sparkles } from 'lucide-react'
+import TodayView from './components/TodayView'
+import { Sparkles, Settings, Plus } from 'lucide-react'
 import { useStore } from './store'
 import type { Task, TaskCreate } from './types'
+
+/**
+ * ビューの種類
+ */
+type ViewType = 'projects' | 'today'
 
 /**
  * メインアプリケーションコンポーネント
@@ -31,6 +38,7 @@ export default function App() {
   } = useStore()
 
   const [defaultProjectId, setDefaultProjectId] = useState<string>('')
+  const [currentView, setCurrentView] = useState<ViewType>('today')
 
   /**
    * 初回レンダリング時にデフォルトプロジェクトを確保
@@ -56,7 +64,7 @@ export default function App() {
     }
 
     initDefaultProject()
-  }, [projects, addProject])
+  }, [projects.length, addProject])
 
   /**
    * 今日のタスクを取得
@@ -144,17 +152,55 @@ export default function App() {
       {/* ヘッダー */}
       <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
-              <Sparkles className="w-6 h-6 text-white" />
+          <div className="flex items-center justify-between">
+            {/* 左側: アプリ名とアイコン */}
+            <div className="flex items-center gap-3">
+              <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
+                <Sparkles className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  Project Companion
+                </h1>
+                <p className="text-xs text-gray-600">
+                  💡 AI秘書があなたのプロジェクト管理をサポート
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                AI Project Companion
-              </h1>
-              <p className="text-xs text-gray-600">
-                💡 AI秘書があなたのタスク管理をサポート
-              </p>
+            
+            {/* 中央: ビュー切替タブ */}
+            <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+              <button
+                onClick={() => setCurrentView('today')}
+                className={`px-6 py-2 rounded-md font-semibold transition-all ${
+                  currentView === 'today'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setCurrentView('projects')}
+                className={`px-6 py-2 rounded-md font-semibold transition-all ${
+                  currentView === 'projects'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                Projects
+              </button>
+            </div>
+            
+            {/* 右側: アクション */}
+            <div className="flex items-center gap-2">
+              <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-semibold shadow-sm">
+                <Plus className="w-4 h-4" />
+                新規プロジェクト
+              </button>
+              <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <Settings className="w-5 h-5" />
+              </button>
             </div>
           </div>
         </div>
@@ -163,8 +209,27 @@ export default function App() {
       {/* メインコンテンツ - flex-1で残りの高さを使用 */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 min-h-0">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
-          {/* 左側: AIチャット（中央に配置、広めに） */}
+          {/* メインビュー領域（左側） */}
           <div className="lg:col-span-2 h-full min-h-0">
+            {currentView === 'today' ? (
+              <TodayView
+                tasks={todayTasks}
+                onToggleTask={handleToggleTask}
+                onDeleteTask={handleDeleteTask}
+                onUpdatePriority={handleUpdatePriority}
+              />
+            ) : (
+              <TaskListComponent 
+                tasks={todayTasks} 
+                onToggleTask={handleToggleTask} 
+                onReorderTasks={handleReorderTasks} 
+                onDeleteTask={handleDeleteTask} 
+              />
+            )}
+          </div>
+
+          {/* チャット領域（右側・常時表示） */}
+          <div className="lg:col-span-1 h-full min-h-0">
             <ChatComponent 
               onTaskCreate={handleAddTask} 
               onTaskDelete={handleDeleteTask} 
@@ -172,16 +237,6 @@ export default function App() {
               onUpdatePriority={handleUpdatePriority}
               tasks={todayTasks}
               defaultProjectId={defaultProjectId}
-            />
-          </div>
-
-          {/* 右側: タスクリスト */}
-          <div className="lg:col-span-1 h-full min-h-0">
-            <TaskListComponent 
-              tasks={todayTasks} 
-              onToggleTask={handleToggleTask} 
-              onReorderTasks={handleReorderTasks} 
-              onDeleteTask={handleDeleteTask} 
             />
           </div>
         </div>
