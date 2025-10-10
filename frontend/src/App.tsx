@@ -13,9 +13,10 @@ import { useEffect, useState } from 'react'
 import ChatComponent from './components/ChatComponent'
 import TaskListComponent from './components/TaskListComponent'
 import TodayView from './components/TodayView'
-import { Sparkles, Settings, Plus } from 'lucide-react'
+import CreateProjectModal from './components/CreateProjectModal'
+import { Sparkles, Settings, Plus, User } from 'lucide-react'
 import { useStore } from './store'
-import type { Task, TaskCreate } from './types'
+import type { Task, TaskCreate, ProjectCreate, MilestoneCreate } from './types'
 
 /**
  * ビューの種類
@@ -34,11 +35,13 @@ export default function App() {
     deleteTask,
     toggleTask,
     getTodayTasks,
-    addProject 
+    addProject,
+    addMilestone,
   } = useStore()
 
   const [defaultProjectId, setDefaultProjectId] = useState<string>('')
   const [currentView, setCurrentView] = useState<ViewType>('today')
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   /**
    * 初回レンダリング時にデフォルトプロジェクトを確保
@@ -147,6 +150,68 @@ export default function App() {
     }
   }
 
+  /**
+   * プロジェクト作成ハンドラ
+   */
+  const handleCreateProject = async (
+    projectData: Omit<ProjectCreate, 'userId'>,
+    milestonesData: Omit<MilestoneCreate, 'projectId'>[],
+    tasksData: Omit<TaskCreate, 'projectId' | 'createdAt' | 'updatedAt' | 'completedAt'>[]
+  ) => {
+    console.log('🎯 handleCreateProject 呼ばれました:', { projectData, milestonesData, tasksData })
+    try {
+      // 1. プロジェクト作成
+      const newProject = await addProject({
+        ...projectData,
+        userId: 'default-user',
+      })
+      console.log('✅ プロジェクト作成成功:', newProject)
+      
+      // 2. マイルストーン作成
+      const createdMilestones = []
+      for (const milestoneData of milestonesData) {
+        const milestone = await addMilestone({
+          ...milestoneData,
+          projectId: newProject.id,
+        })
+        createdMilestones.push(milestone)
+        console.log('✅ マイルストーン作成成功:', milestone)
+      }
+      
+      // 3. タスク作成
+      for (const taskData of tasksData) {
+        // マイルストーンIDがある場合、一時IDから実際のIDに変換
+        let actualMilestoneId = taskData.milestoneId
+        if (actualMilestoneId) {
+          const milestoneIndex = milestonesData.findIndex(m => m === milestonesData[0]) // 簡易マッピング
+          if (milestoneIndex >= 0 && createdMilestones[milestoneIndex]) {
+            actualMilestoneId = createdMilestones[milestoneIndex].id
+          }
+        }
+        
+        const task = await addTask({
+          ...taskData,
+          projectId: newProject.id,
+          milestoneId: actualMilestoneId,
+          dependencies: [],
+          blockedBy: [],
+          tags: [],
+          isToday: false,
+        })
+        console.log('✅ タスク作成成功:', task)
+      }
+      
+      // 4. 作成したプロジェクトをデフォルトに設定
+      setDefaultProjectId(newProject.id)
+      
+      // Projectsビューに切り替え(将来実装)
+      // setCurrentView('projects')
+    } catch (error) {
+      console.error('❌ プロジェクト作成エラー:', error)
+      throw error
+    }
+  }
+
   return (
     <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
       {/* ヘッダー */}
@@ -194,13 +259,23 @@ export default function App() {
             
             {/* 右側: アクション */}
             <div className="flex items-center gap-2">
-              <button className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-semibold shadow-sm">
+              <button 
+                onClick={() => setIsCreateModalOpen(true)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-semibold shadow-sm"
+              >
                 <Plus className="w-4 h-4" />
                 新規プロジェクト
               </button>
               <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
                 <Settings className="w-5 h-5" />
               </button>
+              {/* ユーザーアイコン（ログイン時に表示） */}
+              <div className="relative">
+                <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                  <User className="w-5 h-5" />
+                </button>
+                {/* 将来的にドロップダウンメニューを実装 */}
+              </div>
             </div>
           </div>
         </div>
@@ -241,6 +316,13 @@ export default function App() {
           </div>
         </div>
       </main>
+
+      {/* プロジェクト作成モーダル */}
+      <CreateProjectModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onCreate={handleCreateProject}
+      />
     </div>
   )
 }
