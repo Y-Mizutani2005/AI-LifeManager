@@ -11,8 +11,9 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 # backendディレクトリの.envファイルを読み込み
-# このファイルから見て ../../.env の位置
-env_path = Path(__file__).parent.parent.parent / ".env"
+# このファイル(config.py)の位置: backend/app/core/config.py
+# backend/.env の位置: backend/app/core/config.py から見て ../../.env
+env_path = Path(__file__).parent.parent / ".env"
 load_dotenv(env_path)
 
 

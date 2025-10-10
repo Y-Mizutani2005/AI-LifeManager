@@ -45,6 +45,7 @@ export default function App() {
 
       // なければデフォルトプロジェクトを作成
       const defaultProject = await addProject({
+        userId: 'default-user',
         title: '個人タスク',
         goal: '日々のタスクを管理する',
         description: 'デフォルトのプロジェクト',
