@@ -29,6 +29,8 @@ export interface ProjectContext {
 export interface Project {
   /** プロジェクトの一意識別子 */
   id: string
+  /** プロジェクトの所有者ID(将来のマルチユーザー対応用) */
+  userId: string
   /** プロジェクトのタイトル */
   title: string
   /** プロジェクトの詳細説明 */

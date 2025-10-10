@@ -38,6 +38,7 @@ class ProjectBase(BaseModel):
     プロジェクトの核となる情報を定義
     
     Attributes:
+        userId: プロジェクトの所有者ID(将来のマルチユーザー対応用)
         title: プロジェクトのタイトル
         description: プロジェクトの詳細説明
         goal: プロジェクトの目標
@@ -48,6 +49,7 @@ class ProjectBase(BaseModel):
         color: UI表示用のカラーコード
         context: プロジェクトのコンテキスト情報
     """
+    userId: str = 'default_user'  # デフォルトユーザー(将来認証実装時に動的に変更)
     title: str
     description: Optional[str] = None
     goal: str

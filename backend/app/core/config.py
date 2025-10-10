@@ -33,11 +33,12 @@ class Settings(BaseSettings):
     openai_model: str = "gpt-4o-mini"
     
     # データベース設定
-    db_host: str
+    db_type: str = "sqlite"  # sqlite or postgresql
+    db_host: str = ""
     db_port: str = "5432"
-    db_user: str
-    db_password: str
-    db_name: str
+    db_user: str = ""
+    db_password: str = ""
+    db_name: str = "project_companion.db"
     
     # CORS設定
     cors_origins: list[str] = ["http://localhost:5173"]
@@ -52,10 +53,20 @@ class Settings(BaseSettings):
         """
         データベース接続URLを生成
         
+        SQLiteまたはPostgreSQLの接続URLを返す
+        
         Returns:
-            PostgreSQL接続URL
+            データベース接続URL
         """
-        return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
+        if self.db_type == "sqlite":
+            # SQLiteの場合: backend/data/project_companion.db に保存
+            db_dir = Path(__file__).parent.parent.parent / "data"
+            db_dir.mkdir(exist_ok=True)
+            db_path = db_dir / self.db_name
+            return f"sqlite:///{db_path}"
+        else:
+            # PostgreSQLの場合
+            return f"postgresql://{self.db_user}:{self.db_password}@{self.db_host}:{self.db_port}/{self.db_name}"
     
     class Config:
         env_file = ".env"

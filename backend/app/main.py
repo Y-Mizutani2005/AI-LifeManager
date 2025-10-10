@@ -10,6 +10,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.core.ai import initialize_kernel
 from app.api.routes import chat_router, health_router
+from app.api.routes.projects import router as projects_router
+from app.api.routes.milestones import router as milestones_router
+from app.api.routes.tasks import router as tasks_router
 
 
 # FastAPIアプリケーションの作成
@@ -49,7 +52,7 @@ async def startup_event():
         raise
     
     print(f"✅ OpenAI モデル: {settings.openai_model}")
-    print(f"✅ データベース: {settings.db_host}:{settings.db_port}/{settings.db_name}")
+    print(f"✅ データベース: {settings.database_url}")
     print(f"✅ CORS Origins: {settings.cors_origins}")
     print("=" * 50)
     print("🎉 アプリケーションの起動が完了しました!")
@@ -69,6 +72,9 @@ async def shutdown_event():
 # ルーターの登録
 app.include_router(chat_router, tags=["chat"])
 app.include_router(health_router, tags=["health"])
+app.include_router(projects_router, tags=["projects"])
+app.include_router(milestones_router, tags=["milestones"])
+app.include_router(tasks_router, tags=["tasks"])
 
 
 if __name__ == "__main__":

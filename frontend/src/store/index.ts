@@ -3,6 +3,9 @@
  * 
  * プロジェクト・マイルストーン・タスクの状態管理
  * 将来的にAPI連携に切り替える際も、このインターフェースは維持
+ * 
+ * マルチユーザー対応: 現在は単一ユーザー("default_user")を使用
+ * 将来的に認証機能を追加する際に、動的にユーザーIDを切り替える
  */
 
 import { create } from 'zustand'
@@ -18,6 +21,16 @@ import type {
   TaskCreate,
   TaskUpdate,
 } from '../types'
+
+// ========================================
+// 定数
+// ========================================
+
+/**
+ * デフォルトユーザーID
+ * 将来的に認証機能を追加する際は、ログインユーザーのIDに置き換える
+ */
+const DEFAULT_USER_ID = 'default_user'
 
 // ========================================
 // ユーティリティ関数
@@ -197,6 +210,7 @@ export const useStore = create<AppState>()(
       addProject: async (project) => {
         const newProject: Project = {
           ...project,
+          userId: DEFAULT_USER_ID,  // デフォルトユーザーを設定
           id: generateId(),
           createdAt: now(),
           updatedAt: now(),
