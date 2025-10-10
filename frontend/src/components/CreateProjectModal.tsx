@@ -1,3 +1,9 @@
+import { useState } from 'react'
+import { X, FolderPlus, Calendar, Target, FileText, Tag, Milestone as MilestoneIcon, CheckSquare, Plus, Trash2 } from 'lucide-react'
+import { Button, Input, TextArea } from './ui'
+import { GRADIENTS } from '../constants/theme'
+import type { ProjectCreate, MilestoneCreate, TaskCreate } from '../types'
+
 /**
  * プロジェクト作成モーダル
  * 
@@ -5,9 +11,6 @@
  * 必須項目: プロジェクト名、目標、期限、カラー
  * 任意項目: 説明、タグ、マイルストーン、タスク
  */
-import { useState } from 'react'
-import { X, FolderPlus, Calendar, Target, FileText, Tag, Milestone as MilestoneIcon, CheckSquare, Plus, Trash2 } from 'lucide-react'
-import type { ProjectCreate, MilestoneCreate, TaskCreate } from '../types'
 
 /**
  * プロジェクトカラーパレット
@@ -272,21 +275,23 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-75 p-4">
+      <div className="bg-brand-base rounded-lg shadow-glow max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-800">
         {/* ヘッダー */}
-        <div className="bg-gradient-to-r from-blue-500 to-blue-600 text-white p-6 flex items-center justify-between">
+        <div className={`${GRADIENTS.brand} text-brand-text-light p-6 flex items-center justify-between border-b border-gray-800`}>
           <div className="flex items-center gap-3">
-            <FolderPlus className="w-6 h-6" />
-            <h2 className="text-xl font-bold">新規プロジェクト作成</h2>
+            <FolderPlus className="w-6 h-6 text-white" />
+            <h2 className="text-xl font-bold text-white">新規プロジェクト作成</h2>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="p-1 hover:bg-white hover:bg-opacity-20 rounded transition-colors"
+            className="p-1 hover:bg-gray-100 text-gray-600"
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         {/* フォーム */}
@@ -302,7 +307,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="例: Webアプリ開発"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
             />
           </div>
@@ -317,7 +322,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
               value={goal}
               onChange={(e) => setGoal(e.target.value)}
               placeholder="例: ユーザー管理機能を持つWebアプリケーションを完成させる"
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
               rows={3}
               required
             />
@@ -333,7 +338,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="プロジェクトの詳細な説明..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 resize-none"
               rows={2}
             />
           </div>
@@ -349,7 +354,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>
@@ -363,7 +368,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                 value={targetEndDate}
                 onChange={(e) => setTargetEndDate(e.target.value)}
                 min={startDate}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>
@@ -385,7 +390,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                   }}
                   className={`w-10 h-10 rounded-lg transition-all ${
                     selectedColor === color.value && !customColor
-                      ? 'ring-2 ring-offset-2 ring-blue-500 scale-110'
+                      ? 'ring-2 ring-offset-2 ring-amber-500 scale-110'
                       : 'hover:scale-105'
                   }`}
                   style={{ backgroundColor: color.value }}
@@ -423,14 +428,14 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleTagKeyDown}
                 placeholder="タグを入力してEnter (例: 仕事, 緊急)"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
               {tags.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                      className="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-sm font-medium"
                     >
                       #{tag}
                       <button
@@ -455,7 +460,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
             </label>
             <div className="space-y-3">
               {milestones.map((milestone, index) => (
-                <div key={milestone.id} className="p-4 border border-gray-200 rounded-lg bg-gray-50 space-y-3">
+                <div key={milestone.id} className="p-4 border border-gray-600 rounded-lg bg-brand-base-light space-y-3">
                   <div className="flex items-start gap-2">
                     <div className="flex-1 space-y-3">
                       <input
@@ -463,20 +468,20 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                         value={milestone.title}
                         onChange={(e) => updateMilestone(milestone.id, { title: e.target.value })}
                         placeholder={`マイルストーン ${index + 1} のタイトル`}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full px-3 py-2 bg-brand-base text-brand-text placeholder:text-brand-text-dark border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-brand-primary text-sm"
                       />
                       <textarea
                         value={milestone.description}
                         onChange={(e) => updateMilestone(milestone.id, { description: e.target.value })}
                         placeholder="説明 (任意)"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm resize-none"
                         rows={2}
                       />
                       <input
                         type="date"
                         value={milestone.dueDate}
                         onChange={(e) => updateMilestone(milestone.id, { dueDate: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm"
                       />
                       
                       {/* マイルストーン配下のタスク */}
@@ -489,13 +494,13 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                                 value={task.title}
                                 onChange={(e) => updateTask(task.id, { title: e.target.value })}
                                 placeholder="タスク名"
-                                className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                               />
                               <div className="grid grid-cols-2 gap-2">
                                 <select
                                   value={task.priority}
                                   onChange={(e) => updateTask(task.id, { priority: e.target.value as 'high' | 'medium' | 'low' })}
-                                  className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                                 >
                                   <option value="high">高優先度</option>
                                   <option value="medium">中優先度</option>
@@ -505,7 +510,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                                   type="date"
                                   value={task.dueDate}
                                   onChange={(e) => updateTask(task.id, { dueDate: e.target.value })}
-                                  className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                                 />
                               </div>
                             </div>
@@ -521,7 +526,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                         <button
                           type="button"
                           onClick={() => addTask(milestone.id)}
-                          className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                          className="text-sm text-amber-600 hover:text-amber-700 flex items-center gap-1"
                         >
                           <Plus className="w-4 h-4" />
                           タスクを追加
@@ -541,7 +546,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
               <button
                 type="button"
                 onClick={addMilestone}
-                className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-amber-500 hover:text-amber-600 transition-colors flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 マイルストーンを追加
@@ -557,20 +562,20 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
             </label>
             <div className="space-y-2">
               {tasks.filter(t => !t.milestoneId).map((task) => (
-                <div key={task.id} className="flex items-start gap-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                <div key={task.id} className="flex items-start gap-2 p-3 border border-gray-600 rounded-lg bg-brand-base-light">
                   <div className="flex-1 space-y-2">
                     <input
                       type="text"
                       value={task.title}
                       onChange={(e) => updateTask(task.id, { title: e.target.value })}
                       placeholder="タスク名"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 bg-brand-base text-brand-text placeholder:text-brand-text-dark border border-gray-600 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-brand-primary"
                     />
                     <div className="grid grid-cols-2 gap-2">
                       <select
                         value={task.priority}
                         onChange={(e) => updateTask(task.id, { priority: e.target.value as 'high' | 'medium' | 'low' })}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                       >
                         <option value="high">高優先度</option>
                         <option value="medium">中優先度</option>
@@ -580,7 +585,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
                         type="date"
                         value={task.dueDate}
                         onChange={(e) => updateTask(task.id, { dueDate: e.target.value })}
-                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                       />
                     </div>
                   </div>
@@ -596,7 +601,7 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
               <button
                 type="button"
                 onClick={() => addTask()}
-                className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-blue-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2"
+                className="w-full px-4 py-2 border-2 border-dashed border-gray-300 rounded-lg text-gray-600 hover:border-amber-500 hover:text-amber-600 transition-colors flex items-center justify-center gap-2"
               >
                 <Plus className="w-4 h-4" />
                 タスクを追加
@@ -607,31 +612,21 @@ const CreateProjectModal = ({ isOpen, onClose, onCreate }: CreateProjectModalPro
 
         {/* フッター */}
         <div className="border-t border-gray-200 p-6 flex justify-end gap-3">
-          <button
-            type="button"
+          <Button
+            variant="secondary"
             onClick={handleClose}
             disabled={isSubmitting}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold disabled:opacity-50"
           >
             キャンセル
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSubmit}
             disabled={isSubmitting}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors font-semibold disabled:opacity-50 flex items-center gap-2"
+            isLoading={isSubmitting}
+            icon={!isSubmitting ? <FolderPlus className="w-4 h-4" /> : undefined}
           >
-            {isSubmitting ? (
-              <>
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                作成中...
-              </>
-            ) : (
-              <>
-                <FolderPlus className="w-4 h-4" />
-                プロジェクトを作成
-              </>
-            )}
-          </button>
+            {isSubmitting ? '作成中...' : 'プロジェクトを作成'}
+          </Button>
         </div>
       </div>
     </div>

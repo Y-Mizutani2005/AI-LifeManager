@@ -16,6 +16,9 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
+import { Card, CardHeader } from './ui'
+import { GRADIENTS } from '../constants/theme'
+import { getPriorityStyle, getPriorityLabel, getBorderStyle } from '../utils/styles'
 import type { Task } from '../types'
 
 /**
@@ -68,35 +71,11 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
   const completedTasks = tasks.filter(task => task.status === 'done')
 
   /**
-   * 優先度に応じたスタイルを返す
+   * 優先度に応じたバッジスタイルを返す
    */
-  const getPriorityStyle = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'high':
-        return 'bg-red-100 text-red-700 border-red-200'
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-700 border-yellow-200'
-      case 'low':
-        return 'bg-green-100 text-green-700 border-green-200'
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200'
-    }
-  }
-
-  /**
-   * 優先度の日本語表示を返す
-   */
-  const getPriorityLabel = (priority: Task['priority']) => {
-    switch (priority) {
-      case 'high':
-        return '高'
-      case 'medium':
-        return '中'
-      case 'low':
-        return '低'
-      default:
-        return '-'
-    }
+  const getPriorityBadgeClass = (priority: Task['priority']) => {
+    const style = getPriorityStyle(priority)
+    return `${style.bg} ${style.text} ${style.border}`
   }
 
   /**
@@ -118,18 +97,15 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
       opacity: isDragging ? 0.5 : 1,
     }
 
+    const isCompleted = task.status === 'done'
+    const borderClass = `border-l-4 ${getBorderStyle(task.priority, isCompleted)}`
+
     return (
       <div
         ref={setNodeRef}
         style={style}
-        className={`group bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-200 p-4 border-l-4 ${
-          task.status === 'done'
-            ? 'border-gray-300 bg-gray-50'
-            : task.priority === 'high'
-            ? 'border-red-500'
-            : task.priority === 'medium'
-            ? 'border-yellow-500'
-            : 'border-green-500'
+        className={`group bg-brand-base-light rounded-lg shadow-md shadow-gray-900/20 hover:shadow-lg hover:shadow-indigo-500/20 transition-all duration-200 p-4 border border-gray-800 ${borderClass} ${
+          isCompleted ? 'bg-brand-base opacity-75' : ''
         } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
       >
         <div className="flex items-start gap-3">
@@ -137,7 +113,7 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
           <div
             {...attributes}
             {...listeners}
-            className="flex-shrink-0 mt-1 cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 transition-colors"
+            className="flex-shrink-0 mt-1 cursor-grab active:cursor-grabbing text-brand-text-dark hover:text-brand-text transition-colors"
           >
             <GripVertical className="w-5 h-5" />
           </div>
@@ -145,12 +121,12 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
           {/* チェックボックス */}
           <button
             onClick={() => onToggleTask(task.id)}
-            className="flex-shrink-0 mt-1 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded"
+            className="flex-shrink-0 mt-1 focus:outline-none focus:ring-2 focus:ring-amber-500 rounded"
           >
             {task.status === 'done' ? (
               <CheckCircle2 className="w-6 h-6 text-green-500" />
             ) : (
-              <Circle className="w-6 h-6 text-gray-400 group-hover:text-blue-500 transition-colors" />
+              <Circle className="w-6 h-6 text-gray-400 group-hover:text-amber-500 transition-colors" />
             )}
           </button>
 
@@ -169,7 +145,7 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
 
           {/* 優先度バッジ */}
           <div
-            className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-semibold border ${getPriorityStyle(
+            className={`flex-shrink-0 px-2 py-1 rounded-full text-xs font-semibold border ${getPriorityBadgeClass(
               task.priority
             )}`}
           >
@@ -200,30 +176,20 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
       collisionDetection={closestCenter}
       onDragEnd={handleDragEnd}
     >
-      <div className="flex flex-col h-full bg-white rounded-lg shadow-lg overflow-hidden">
+      <Card variant="primary" className="flex flex-col h-full">
         {/* ヘッダー */}
-  <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex-shrink-0">
-          <div className="flex items-center gap-2 mb-2">
-            <Calendar className="w-6 h-6" />
-            <h2 className="text-xl font-bold">今日のタスク</h2>
-          </div>
-          <div className="flex items-center gap-4 text-sm">
-            <div className="flex items-center gap-1">
-              <Circle className="w-4 h-4" />
-              <span>未完了: {todayTasks.length}件</span>
-            </div>
-            <div className="flex items-center gap-1">
-              <CheckCircle2 className="w-4 h-4" />
-              <span>完了: {completedTasks.length}件</span>
-            </div>
-          </div>
-        </div>
+        <CardHeader
+          variant="primary"
+          icon={<Calendar className="w-6 h-6" />}
+          title="今日のタスク"
+          subtitle={`未完了: ${todayTasks.length}件 | 完了: ${completedTasks.length}件`}
+        />
 
         {/* タスクリスト */}
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50 min-h-0">
+        <div className="flex-1 overflow-y-auto p-4 bg-brand-base-dark min-h-0">
           {tasks.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-gray-400">
-              <AlertCircle className="w-16 h-16 mb-4 text-gray-300" />
+            <div className="flex flex-col items-center justify-center h-full text-brand-text-dark">
+              <AlertCircle className="w-16 h-16 mb-4 text-gray-600" />
               <p className="text-lg font-semibold mb-2">タスクがありません</p>
               <p className="text-sm text-center">
                 左のチャットでAIに<br />
@@ -266,16 +232,16 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
 
         {/* フッター統計 */}
         {tasks.length > 0 && (
-          <div className="bg-white border-t border-gray-200 p-4 flex-shrink-0">
+          <div className="bg-brand-base border-t border-gray-800 p-4 flex-shrink-0">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600">進捗状況</span>
-              <span className="font-semibold text-purple-600">
+              <span className="text-brand-text-dark">進捗状況</span>
+              <span className="font-semibold text-brand-accent">
                 {completedTasks.length} / {tasks.length} 完了
               </span>
             </div>
-            <div className="mt-2 bg-gray-200 rounded-full h-2 overflow-hidden">
+            <div className="mt-2 bg-gray-700 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-gradient-to-r from-purple-500 to-purple-600 h-full transition-all duration-300"
+                className={`${GRADIENTS.brand} h-full transition-all duration-300`}
                 style={{
                   width: `${tasks.length > 0 ? (completedTasks.length / tasks.length) * 100 : 0}%`
                 }}
@@ -283,7 +249,7 @@ const TaskListComponent = ({ tasks, onToggleTask, onReorderTasks, onDeleteTask }
             </div>
           </div>
         )}
-      </div>
+      </Card>
     </DndContext>
   )
 }

@@ -1,8 +1,9 @@
 {
-  "name": "frontend",
+  "name": "tasksparkle-frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
+  "description": "TaskSparkle - AI対話で楽しく進められる、次世代タスク管理アプリ",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

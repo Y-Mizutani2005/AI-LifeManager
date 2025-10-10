@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Bot, User, Send } from 'lucide-react'
+import { Button, TextArea } from './ui'
+import { GRADIENTS } from '../constants/theme'
 import type { Task, TaskCreate } from '../types'
 
 /**
@@ -229,18 +231,18 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
   }
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+    <div className="flex flex-col h-full bg-brand-base rounded-lg shadow-glow overflow-hidden border border-gray-800">
       {/* ヘッダー */}
-      <div className="bg-gradient-to-r from-purple-500 to-purple-600 text-white p-4 flex items-center gap-3 flex-shrink-0 min-h-[64px]">
-        <Bot className="w-6 h-6" />
+      <div className={`${GRADIENTS.brand} text-brand-text-light p-4 flex items-center gap-3 flex-shrink-0 min-h-[64px] border-b border-gray-800`}>
+        <Bot className="w-6 h-6 animate-twinkle text-white" />
         <div>
-          <h2 className="text-lg font-bold">💬 AI Assistant</h2>
-          <p className="text-xs text-purple-100">タスク作成や相談ができます</p>
+          <h2 className="text-lg font-bold">AI Assistant</h2>
+          <p className="text-xs text-brand-text-dark">タスク作成や相談ができます</p>
         </div>
       </div>
 
       {/* チャット履歴エリア */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-50 min-h-0">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-brand-base-dark min-h-0">
         {chatHistory.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-gray-400">
             <Bot className="w-12 h-12 mb-3 text-gray-300" />
@@ -262,8 +264,8 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
                 <div
                   className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
                     msg.role === 'user'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-gray-200 text-gray-600'
+                      ? GRADIENTS.brand + ' text-white border border-gray-600'
+                      : 'bg-brand-base-light text-brand-sparkle border border-gray-600'
                   }`}
                 >
                   {msg.role === 'user' ? (
@@ -277,15 +279,13 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
                 <div
                   className={`max-w-[75%] rounded-lg p-3 ${
                     msg.role === 'user'
-                      ? 'bg-blue-500 text-white'
-                      : 'bg-white text-gray-800 shadow-sm border border-gray-200'
+                      ? `${GRADIENTS.brand} text-white shadow-md shadow-indigo-500/20 border border-gray-600`
+                      : 'bg-brand-base-light text-brand-text shadow-md shadow-gray-900/20 border border-gray-600'
                   }`}
                 >
                   <p className="text-sm whitespace-pre-wrap break-words">{msg.content}</p>
                   <p
-                    className={`text-xs mt-1 ${
-                      msg.role === 'user' ? 'text-blue-100' : 'text-gray-400'
-                    }`}
+                    className={`text-xs mt-1 text-gray-400`}
                   >
                     {msg.timestamp.toLocaleTimeString('ja-JP', {
                       hour: '2-digit',
@@ -302,14 +302,14 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
         {/* ローディングインジケーター */}
         {isLoading && (
           <div className="flex gap-2">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center">
-              <Bot className="w-4 h-4 text-gray-600" />
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-brand-base-light flex items-center justify-center border border-gray-600">
+              <Bot className="w-4 h-4 text-brand-sparkle" />
             </div>
-            <div className="bg-white rounded-lg p-3 shadow-sm border border-gray-200">
+            <div className="bg-brand-base-light rounded-lg p-3 shadow-md shadow-gray-900/20 border border-gray-600">
               <div className="flex gap-1">
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce [animation-delay:0.4s]" />
+                <div className="w-2 h-2 bg-brand-sparkle rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-brand-sparkle rounded-full animate-bounce [animation-delay:0.2s]" />
+                <div className="w-2 h-2 bg-brand-sparkle rounded-full animate-bounce [animation-delay:0.4s]" />
               </div>
             </div>
           </div>
@@ -317,29 +317,28 @@ const ChatComponent = ({ onTaskCreate, onTaskDelete, onTaskToggle, onUpdatePrior
       </div>
 
       {/* 入力エリア */}
-      <div className="p-3 bg-white border-t border-gray-200 flex-shrink-0">
+      <div className="p-3 bg-brand-base border-t border-gray-800 flex-shrink-0">
         <div className="flex gap-2">
           {/*
             テキストエリアで3行まで改行可能。4行目以降はスクロール。
             Enterで送信、Shift+Enterで改行。
           */}
-          <textarea
+          <TextArea
             value={message}
             onChange={e => setMessage(e.target.value)}
             onKeyDown={handleKeyPress}
             placeholder="メッセージを入力..."
             rows={1}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all resize-none max-h-[90px] min-h-[40px] overflow-y-auto text-sm"
+            className="max-h-[90px] min-h-[40px] overflow-y-auto text-sm"
             style={{lineHeight: '1.5'}}
             disabled={isLoading}
           />
-          <button
+          <Button
             onClick={sendMessage}
             disabled={isLoading || !message.trim()}
-            className="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors flex items-center gap-2 font-semibold text-sm"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+            icon={<Send className="w-4 h-4" />}
+            size="md"
+          />
         </div>
       </div>
     </div>

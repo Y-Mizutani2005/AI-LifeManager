@@ -1,21 +1,24 @@
 /**
- * Project Companion - メインアプリケーション
+ * TaskSparkle - メインアプリケーション
  * 
- * AI対話でタスク管理ができる個人向けWebアプリ
+ * タスクに輝きを、未来にスピードを。
+ * AI対話で楽しく進められる、次世代タスク管理アプリ
  * 
  * コア機能:
- * ✅ AI対話でタスク作成(差別化ポイント)
- * ✅ AI相談機能(秘書のような体験)
- * ✅ 今日のタスク表示(最小限の価値提供)
- * ✅ Projects/Todayビュー切替
+ * ✨ AI対話でタスク作成(差別化ポイント)
+ * ✨ AI相談機能(秘書のような体験)
+ * ✨ 今日のタスク表示(最小限の価値提供)
+ * ✨ Projects/Todayビュー切替
  */
 import { useEffect, useState } from 'react'
 import ChatComponent from './components/ChatComponent'
 import TaskListComponent from './components/TaskListComponent'
 import TodayView from './components/TodayView'
 import CreateProjectModal from './components/CreateProjectModal'
+import { Button } from './components/ui'
 import { Sparkles, Settings, Plus, User } from 'lucide-react'
 import { useStore } from './store'
+import { GRADIENTS } from './constants/theme'
 import type { Task, TaskCreate, ProjectCreate, MilestoneCreate } from './types'
 
 /**
@@ -213,34 +216,31 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50">
+    <div className={`h-screen flex flex-col ${GRADIENTS.background}`}>
       {/* ヘッダー */}
-      <header className="bg-white shadow-sm border-b border-gray-200 flex-shrink-0">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <header className="bg-brand-base shadow-lg shadow-indigo-500/10 border-b border-gray-800 flex-shrink-0">
+        <div className="w-full px-4 sm:px-6 lg:px-8 py-4 max-w-screen-2xl mx-auto">
           <div className="flex items-center justify-between">
             {/* 左側: アプリ名とアイコン */}
             <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-2 rounded-lg">
-                <Sparkles className="w-6 h-6 text-white" />
+              <div className={`${GRADIENTS.brand} p-2 rounded-lg shadow-glow-sm`}>
+                <Sparkles className="w-6 h-6 text-white animate-twinkle" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  Project Companion
+                <h1 className={`text-2xl font-bold ${GRADIENTS.text}`}>
+                  TaskSparkle
                 </h1>
-                <p className="text-xs text-gray-600">
-                  💡 AI秘書があなたのプロジェクト管理をサポート
-                </p>
               </div>
             </div>
             
             {/* 中央: ビュー切替タブ */}
-            <div className="flex gap-2 bg-gray-100 p-1 rounded-lg">
+            <div className="flex gap-2 bg-brand-base-dark p-1 rounded-lg border border-gray-800">
               <button
                 onClick={() => setCurrentView('today')}
                 className={`px-6 py-2 rounded-md font-semibold transition-all ${
                   currentView === 'today'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-brand-primary text-white shadow-md shadow-indigo-500/30'
+                    : 'text-brand-text-dark hover:text-brand-text hover:bg-brand-base-light'
                 }`}
               >
                 Today
@@ -249,8 +249,8 @@ export default function App() {
                 onClick={() => setCurrentView('projects')}
                 className={`px-6 py-2 rounded-md font-semibold transition-all ${
                   currentView === 'projects'
-                    ? 'bg-white text-blue-600 shadow-sm'
-                    : 'text-gray-600 hover:text-gray-900'
+                    ? 'bg-brand-primary text-white shadow-md shadow-indigo-500/30'
+                    : 'text-brand-text-dark hover:text-brand-text hover:bg-brand-base-light'
                 }`}
               >
                 Projects
@@ -259,21 +259,20 @@ export default function App() {
             
             {/* 右側: アクション */}
             <div className="flex items-center gap-2">
-              <button 
+              <Button 
                 onClick={() => setIsCreateModalOpen(true)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2 font-semibold shadow-sm"
+                icon={<Plus className="w-4 h-4" />}
               >
-                <Plus className="w-4 h-4" />
                 新規プロジェクト
-              </button>
-              <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+              </Button>
+              <Button variant="ghost" size="md" className="p-2">
                 <Settings className="w-5 h-5" />
-              </button>
+              </Button>
               {/* ユーザーアイコン（ログイン時に表示） */}
               <div className="relative">
-                <button className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors">
+                <Button variant="ghost" size="md" className="p-2">
                   <User className="w-5 h-5" />
-                </button>
+                </Button>
                 {/* 将来的にドロップダウンメニューを実装 */}
               </div>
             </div>
@@ -282,8 +281,8 @@ export default function App() {
       </header>
 
       {/* メインコンテンツ - flex-1で残りの高さを使用 */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4 min-h-0">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full">
+      <main className="flex-1 w-full px-4 sm:px-6 lg:px-8 py-4 min-h-0">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-full max-w-screen-2xl mx-auto">
           {/* メインビュー領域（左側） */}
           <div className="lg:col-span-2 h-full min-h-0">
             {currentView === 'today' ? (
